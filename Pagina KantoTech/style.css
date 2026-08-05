@@ -1,0 +1,425 @@
+/* ======================================================
+   KantoTech — Guante Traductor
+   Paleta original conservada + tokens de diseño
+====================================================== */
+
+:root{
+    --crema:        #f8e0cb;
+    --rosa-claro:   #f7baae;
+    --rosa-fuerte:  #e14778;
+    --ciruela:      #5c1240;   /* derivado de rosa-fuerte, para texto y contraste */
+    --blanco:       #ffffff;
+
+    --fuente-display: "MuseoModerno", sans-serif;
+    --fuente-cuerpo:  "Quicksand", sans-serif;
+
+    --radio-suave: 14px;
+    --radio-pastilla: 999px;
+    --sombra-suave: 0 10px 30px rgba(92, 18, 64, 0.14);
+
+    --alto-header: 84px;
+}
+
+*{
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html{
+    scroll-behavior: smooth;
+}
+
+body{
+    font-family: var(--fuente-cuerpo);
+    color: var(--ciruela);
+}
+
+/* ======================= HEADER ======================= */
+
+header{
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    width: 100%;
+    height: var(--alto-header);
+    background-color: var(--rosa-fuerte);
+    box-shadow: 0 4px 18px rgba(92, 18, 64, 0.25);
+}
+
+.menu{
+    height: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.btn{
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    cursor: pointer;
+}
+
+.btn span{
+    display: block;
+    width: 24px;
+    height: 3px;
+    border-radius: 2px;
+    background-color: var(--blanco);
+}
+
+.marca{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.marca h1{
+    color: var(--blanco);
+    font-family: var(--fuente-display);
+    font-weight: 600;
+    font-size: 1.5rem;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+}
+
+.logo{
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 2px solid var(--blanco);
+    object-fit: cover;
+    background: var(--blanco);
+}
+
+.btn-bluetooth{
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1.5px solid var(--blanco);
+    background: transparent;
+    color: var(--blanco);
+    font-family: var(--fuente-cuerpo);
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 9px 16px;
+    border-radius: var(--radio-pastilla);
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.btn-bluetooth:hover{
+    transform: translateY(-1px);
+}
+
+.btn-bluetooth.conectado{
+    background-color: var(--blanco);
+    color: var(--rosa-fuerte);
+}
+
+.icono-bt{
+    width: 15px;
+    height: 15px;
+}
+
+.bt-punto{
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: rgba(255,255,255,0.55);
+    margin-left: 2px;
+}
+
+.btn-bluetooth.conectado .bt-punto{
+    background-color: var(--rosa-fuerte);
+    animation: pulso 1.6s ease-in-out infinite;
+}
+
+@keyframes pulso{
+    0%, 100%{ opacity: 1; transform: scale(1); }
+    50%{ opacity: 0.4; transform: scale(1.3); }
+}
+
+/* ======================= FONDO / CONTENEDOR ======================= */
+
+.contenedor{
+    position: relative;
+    background: linear-gradient(
+        180deg,
+        var(--crema) 0%,
+        var(--rosa-claro) 45%,
+        var(--rosa-fuerte) 100%
+    );
+    min-height: calc(100vh - var(--alto-header));
+    padding: 40px 20px 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+}
+
+.eyebrow{
+    font-family: var(--fuente-cuerpo);
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: var(--rosa-fuerte);
+    margin-bottom: 14px;
+}
+
+section{
+    width: 100%;
+    max-width: 720px;
+    background-color: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(6px);
+    border-radius: 20px;
+    padding: 26px 28px;
+    box-shadow: var(--sombra-suave);
+}
+
+/* ======================= PANEL CONEXIÓN ======================= */
+
+.conexion-detalle{
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.estado-grande{
+    font-family: var(--fuente-display);
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--ciruela);
+}
+
+.estado-grande.conectado{
+    color: var(--rosa-fuerte);
+}
+
+.nombre-dispositivo{
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--rosa-fuerte);
+    opacity: 0.85;
+}
+
+.ayuda-conexion{
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--ciruela);
+    opacity: 0.75;
+}
+
+/* ======================= PANEL RENGLÓN (elemento firma) ======================= */
+
+.letra-actual-caja{
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.letra-actual{
+    font-family: var(--fuente-display);
+    font-size: 3.4rem;
+    font-weight: 700;
+    color: var(--rosa-fuerte);
+    line-height: 1;
+    min-width: 56px;
+}
+
+.letra-actual-etiqueta{
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--ciruela);
+    opacity: 0.6;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.cinta-scroll{
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 14px;
+    scrollbar-width: thin;
+}
+
+.cinta{
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    min-height: 64px;
+    width: max-content;
+    min-width: 100%;
+    border-bottom: 2px dashed var(--rosa-claro);
+    padding-bottom: 10px;
+}
+
+.cinta-letra{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 48px;
+    padding: 0 6px;
+    background-color: var(--crema);
+    border: 1.5px solid var(--rosa-claro);
+    border-radius: 10px;
+    font-family: var(--fuente-display);
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--ciruela);
+    animation: aparecer 0.28s ease;
+    white-space: nowrap;
+}
+
+.cinta-letra.espacio{
+    min-width: 22px;
+    background-color: transparent;
+    border: none;
+}
+
+@keyframes aparecer{
+    from{ transform: scale(0.5) translateY(6px); opacity: 0; }
+    to{ transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.cinta-cursor{
+    display: inline-block;
+    width: 3px;
+    height: 32px;
+    background-color: var(--rosa-fuerte);
+    border-radius: 2px;
+    animation: parpadeo 1s steps(1) infinite;
+    align-self: center;
+}
+
+@keyframes parpadeo{
+    0%, 49%{ opacity: 1; }
+    50%, 100%{ opacity: 0; }
+}
+
+.acciones-renglon{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.btn-accion{
+    font-family: var(--fuente-cuerpo);
+    font-weight: 600;
+    font-size: 0.82rem;
+    padding: 10px 16px;
+    border-radius: var(--radio-pastilla);
+    cursor: pointer;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-accion:hover{
+    transform: translateY(-1px);
+}
+
+.btn-fantasma{
+    background: transparent;
+    border: 1.5px solid var(--rosa-fuerte);
+    color: var(--rosa-fuerte);
+}
+
+.btn-relleno{
+    background-color: var(--rosa-fuerte);
+    border: 1.5px solid var(--rosa-fuerte);
+    color: var(--blanco);
+    margin-left: auto;
+}
+
+/* ======================= PANEL SENSORES ======================= */
+
+.grilla-sensores{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 16px;
+}
+
+.sensor-tarjeta{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background-color: var(--crema);
+    border-radius: var(--radio-suave);
+    padding: 14px 16px;
+}
+
+.sensor-nombre{
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--ciruela);
+}
+
+.sensor-barra{
+    width: 100%;
+    height: 8px;
+    border-radius: var(--radio-pastilla);
+    background-color: rgba(92, 18, 64, 0.12);
+    overflow: hidden;
+}
+
+.sensor-barra-relleno{
+    height: 100%;
+    background-color: var(--rosa-fuerte);
+    border-radius: var(--radio-pastilla);
+    transition: width 0.25s ease;
+}
+
+.sensor-valor{
+    align-self: flex-end;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--rosa-fuerte);
+}
+
+/* ======================= RESPONSIVE ======================= */
+
+@media (max-width: 640px){
+    .marca h1{
+        font-size: 1.15rem;
+    }
+    .logo{
+        width: 42px;
+        height: 42px;
+    }
+    .btn-bluetooth span#btEstadoTexto{
+        display: none;
+    }
+    .btn-bluetooth{
+        padding: 9px 12px;
+    }
+    section{
+        padding: 20px;
+    }
+    .letra-actual{
+        font-size: 2.4rem;
+    }
+    .btn-relleno{
+        margin-left: 0;
+        width: 100%;
+        text-align: center;
+    }
+}
