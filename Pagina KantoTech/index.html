@@ -14,88 +14,125 @@
     <header>
         <div class="menu">
             <div class="marca">
-                <img src="./imagenes/logo.recortado.png" class="logo" alt="Logo de KantoTech">
+                <img src="imagenes/logo.recortado.png" class="logo" alt="Logo de KantoTech">
                 <h1>KantoTech</h1>
             </div>
 
-            <button id="btnBluetooth" class="btn-bluetooth" aria-live="polite">
-                <svg class="icono-bt" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M6.5 6.5L17.5 17.5L12 22V2L17.5 6.5L6.5 17.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <span id="btEstadoTexto">Conectar guante</span>
-                <span id="btPunto" class="bt-punto"></span>
-            </button>
+            <div class="acciones-header">
+                <button id="btnBluetooth" class="btn-bluetooth" aria-live="polite">
+                    <svg class="icono-bt" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6.5 6.5L17.5 17.5L12 22V2L17.5 6.5L6.5 17.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span id="btEstadoTexto">Conectar guante</span>
+                    <span id="btPunto" class="bt-punto"></span>
+                </button>
+
+                <div class="config-envoltorio">
+                    <button id="btnConfig" class="btn-config" aria-label="Configuración" aria-expanded="false">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" stroke-width="2"/>
+                            <path d="M19.4 13.5a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V19.6a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1.08-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H4.4a2 2 0 110-4h.09a1.65 1.65 0 001.51-1.08 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H10a1.65 1.65 0 001-1.51V4.4a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V10a1.65 1.65 0 001.51 1h.09a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                    </button>
+
+                    <div id="panelConfig" class="panel-config oculto">
+                        <div class="config-item">
+                            <span>Modo oscuro</span>
+                            <label class="interruptor">
+                                <input type="checkbox" id="chkModoOscuro">
+                                <span class="interruptor-riel"></span>
+                            </label>
+                        </div>
+                        <button id="btnAbrirCalibracion" class="config-opcion">
+                            Verificación y calibración de sensores
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </header>
 
     <div class="contenedor">
 
-        <section class="panel-conexion">
-            <p class="eyebrow">Estado del dispositivo</p>
-            <div class="conexion-detalle">
-                <span id="estadoGrande" class="estado-grande">Desconectado</span>
-                <span id="nombreDispositivo" class="nombre-dispositivo"></span>
-            </div>
-            <p class="ayuda-conexion">Tocá "Conectar guante" y elegí tu ESP32 en la ventana de Bluetooth del navegador. Funciona en Chrome / Edge, sobre HTTPS.</p>
-        </section>
+        <div id="pantallaPrincipal" class="pantalla">
 
-        <section class="panel-renglon">
-            <p class="eyebrow">Traducción en vivo</p>
+            <section class="panel-conexion">
+                <p class="eyebrow">Estado del dispositivo</p>
+                <div class="conexion-detalle">
+                    <span id="estadoGrande" class="estado-grande">Desconectado</span>
+                    <span id="nombreDispositivo" class="nombre-dispositivo"></span>
+                </div>
+                <p class="ayuda-conexion">Tocá "Conectar guante" y elegí tu ESP32 en la ventana de Bluetooth del navegador. Funciona en Chrome / Edge, sobre HTTPS.</p>
+            </section>
 
-            <div class="letra-actual-caja">
-                <span id="letraActual" class="letra-actual">–</span>
-                <span class="letra-actual-etiqueta">seña actual</span>
-            </div>
+            <section class="panel-renglon">
+                <p class="eyebrow">Traducción en vivo</p>
 
-            <div class="cinta-scroll">
-                <div id="cinta" class="cinta">
-                    <span class="cinta-cursor" id="cintaCursor"></span>
+                <div class="letra-actual-caja">
+                    <span id="letraActual" class="letra-actual">–</span>
+                    <span class="letra-actual-etiqueta">seña actual</span>
                 </div>
-            </div>
 
-            <div class="acciones-renglon">
-                <button id="btnEspacio" class="btn-accion btn-fantasma">Espacio</button>
-                <button id="btnBorrarLetra" class="btn-accion btn-fantasma">Borrar última</button>
-                <button id="btnLimpiar" class="btn-accion btn-fantasma">Limpiar todo</button>
-                <button id="btnCopiar" class="btn-accion btn-relleno">Copiar oración</button>
-            </div>
-        </section>
+                <div class="cinta-scroll">
+                    <div id="cinta" class="cinta">
+                        <span class="cinta-cursor" id="cintaCursor"></span>
+                    </div>
+                </div>
 
-        <section class="panel-sensores">
-            <p class="eyebrow">Sensado del guante</p>
-            <div id="grillaSensores" class="grilla-sensores">
-                <div class="sensor-tarjeta error" data-sensor="0">
-                    <span class="sensor-nombre">Pulgar</span>
-                    <div class="sensor-barra"><div class="sensor-barra-relleno" style="width:0%"></div></div>
-                    <span class="sensor-valor">0</span>
-                    <span class="sensor-error-msg">⚠ Sin lectura</span>
+                <div class="acciones-renglon">
+                    <button id="btnEspacio" class="btn-accion btn-fantasma">Espacio</button>
+                    <button id="btnBorrarLetra" class="btn-accion btn-fantasma">Borrar última</button>
+                    <button id="btnLimpiar" class="btn-accion btn-fantasma">Limpiar todo</button>
+                    <button id="btnCopiar" class="btn-accion btn-relleno">Copiar oración</button>
                 </div>
-                <div class="sensor-tarjeta error" data-sensor="1">
-                    <span class="sensor-nombre">Índice</span>
-                    <div class="sensor-barra"><div class="sensor-barra-relleno" style="width:0%"></div></div>
-                    <span class="sensor-valor">0</span>
-                    <span class="sensor-error-msg">⚠ Sin lectura</span>
+            </section>
+
+        </div>
+
+        <div id="pantallaCalibracion" class="pantalla oculto">
+
+            <section class="panel-sensores">
+                <div class="calibracion-encabezado">
+                    <p class="eyebrow">Verificación y calibración</p>
+                    <button id="btnVolver" class="btn-accion btn-fantasma">← Volver</button>
                 </div>
-                <div class="sensor-tarjeta error" data-sensor="2">
-                    <span class="sensor-nombre">Medio</span>
-                    <div class="sensor-barra"><div class="sensor-barra-relleno" style="width:0%"></div></div>
-                    <span class="sensor-valor">0</span>
-                    <span class="sensor-error-msg">⚠ Sin lectura</span>
+                <p class="ayuda-conexion">Revisá acá que cada sensor esté mandando datos correctamente antes de usar el guante.</p>
+
+                <div id="grillaSensores" class="grilla-sensores">
+                    <div class="sensor-tarjeta error" data-sensor="0">
+                        <span class="sensor-nombre">Pulgar</span>
+                        <div class="sensor-barra"><div class="sensor-barra-relleno" style="width:0%"></div></div>
+                        <span class="sensor-valor">0</span>
+                        <span class="sensor-error-msg">⚠ Sin lectura</span>
+                    </div>
+                    <div class="sensor-tarjeta error" data-sensor="1">
+                        <span class="sensor-nombre">Índice</span>
+                        <div class="sensor-barra"><div class="sensor-barra-relleno" style="width:0%"></div></div>
+                        <span class="sensor-valor">0</span>
+                        <span class="sensor-error-msg">⚠ Sin lectura</span>
+                    </div>
+                    <div class="sensor-tarjeta error" data-sensor="2">
+                        <span class="sensor-nombre">Medio</span>
+                        <div class="sensor-barra"><div class="sensor-barra-relleno" style="width:0%"></div></div>
+                        <span class="sensor-valor">0</span>
+                        <span class="sensor-error-msg">⚠ Sin lectura</span>
+                    </div>
+                    <div class="sensor-tarjeta error" data-sensor="3">
+                        <span class="sensor-nombre">Anular</span>
+                        <div class="sensor-barra"><div class="sensor-barra-relleno" style="width:0%"></div></div>
+                        <span class="sensor-valor">0</span>
+                        <span class="sensor-error-msg">⚠ Sin lectura</span>
+                    </div>
+                    <div class="sensor-tarjeta error" data-sensor="4">
+                        <span class="sensor-nombre">Meñique</span>
+                        <div class="sensor-barra"><div class="sensor-barra-relleno" style="width:0%"></div></div>
+                        <span class="sensor-valor">0</span>
+                        <span class="sensor-error-msg">⚠ Sin lectura</span>
+                    </div>
                 </div>
-                <div class="sensor-tarjeta error" data-sensor="3">
-                    <span class="sensor-nombre">Anular</span>
-                    <div class="sensor-barra"><div class="sensor-barra-relleno" style="width:0%"></div></div>
-                    <span class="sensor-valor">0</span>
-                    <span class="sensor-error-msg">⚠ Sin lectura</span>
-                </div>
-                <div class="sensor-tarjeta error" data-sensor="4">
-                    <span class="sensor-nombre">Meñique</span>
-                    <div class="sensor-barra"><div class="sensor-barra-relleno" style="width:0%"></div></div>
-                    <span class="sensor-valor">0</span>
-                    <span class="sensor-error-msg">⚠ Sin lectura</span>
-                </div>
-            </div>
-        </section>
+            </section>
+
+        </div>
 
     </div>
 
