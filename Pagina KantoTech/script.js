@@ -60,6 +60,57 @@ btnBluetooth.addEventListener("click", () => {
 });
 
 /* --------------------------------------------------------
+   4b) MENÚ DE CONFIGURACIÓN (modo oscuro + calibración)
+-------------------------------------------------------- */
+const btnConfig = document.getElementById("btnConfig");
+const panelConfig = document.getElementById("panelConfig");
+const chkModoOscuro = document.getElementById("chkModoOscuro");
+const pantallaPrincipal = document.getElementById("pantallaPrincipal");
+const pantallaCalibracion = document.getElementById("pantallaCalibracion");
+
+btnConfig.addEventListener("click", (evento) => {
+    evento.stopPropagation();
+    const abierto = panelConfig.classList.toggle("oculto") === false;
+    btnConfig.classList.toggle("activo", abierto);
+    btnConfig.setAttribute("aria-expanded", abierto);
+});
+
+document.addEventListener("click", (evento) => {
+    if (!panelConfig.contains(evento.target) && evento.target !== btnConfig) {
+        panelConfig.classList.add("oculto");
+        btnConfig.classList.remove("activo");
+        btnConfig.setAttribute("aria-expanded", "false");
+    }
+});
+
+// Modo oscuro: se recuerda entre visitas con localStorage
+const modoOscuroGuardado = localStorage.getItem("kantotech-modo-oscuro") === "true";
+aplicarModoOscuro(modoOscuroGuardado);
+chkModoOscuro.checked = modoOscuroGuardado;
+
+chkModoOscuro.addEventListener("change", () => {
+    aplicarModoOscuro(chkModoOscuro.checked);
+    localStorage.setItem("kantotech-modo-oscuro", chkModoOscuro.checked);
+});
+
+function aplicarModoOscuro(activo) {
+    document.documentElement.setAttribute("data-tema", activo ? "oscuro" : "claro");
+}
+
+// Verificación y calibración de sensores: ahora es una pantalla aparte
+document.getElementById("btnAbrirCalibracion").addEventListener("click", () => {
+    pantallaPrincipal.classList.add("oculto");
+    pantallaCalibracion.classList.remove("oculto");
+    panelConfig.classList.add("oculto");
+    btnConfig.classList.remove("activo");
+});
+
+document.getElementById("btnVolver").addEventListener("click", () => {
+    pantallaCalibracion.classList.add("oculto");
+    pantallaPrincipal.classList.remove("oculto");
+});
+
+/* --------------------------------------------------------
    4) CONEXIÓN BLUETOOTH
 -------------------------------------------------------- */
 async function conectarGuante() {
@@ -274,4 +325,3 @@ function renderizarCinta() {
     cinta.appendChild(cintaCursor);
     cinta.parentElement.scrollLeft = cinta.parentElement.scrollWidth;
 }
-
