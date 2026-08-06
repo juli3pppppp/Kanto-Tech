@@ -58,28 +58,6 @@ header{
     gap: 16px;
 }
 
-.btn{
-    flex-shrink: 0;
-    width: 40px;
-    height: 40px;
-    border: none;
-    background: transparent;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    cursor: pointer;
-}
-
-.btn span{
-    display: block;
-    width: 24px;
-    height: 3px;
-    border-radius: 2px;
-    background-color: var(--blanco);
-}
-
 .marca{
     display: flex;
     align-items: center;
@@ -395,6 +373,29 @@ section{
     color: var(--rosa-fuerte);
 }
 
+.sensor-error-msg{
+    display: none;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--rosa-fuerte);
+}
+
+.sensor-tarjeta.error{
+    background-color: rgba(225, 71, 120, 0.08);
+    border: 1.5px dashed var(--rosa-fuerte);
+}
+
+.sensor-tarjeta.error .sensor-barra,
+.sensor-tarjeta.error .sensor-valor{
+    display: none;
+}
+
+.sensor-tarjeta.error .sensor-error-msg{
+    display: flex;
+}
+
 /* ======================= RESPONSIVE ======================= */
 
 @media (max-width: 640px){
@@ -423,3 +424,4 @@ section{
         text-align: center;
     }
 }
+
