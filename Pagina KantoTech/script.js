@@ -27,11 +27,13 @@ const estado = {
     ultimaLetraCruda: "",
     ultimaLetraConfirmada: "",
     temporizadorEstabilidad: null,
-    oracion: [] // array de { tipo: 'letra' | 'espacio', valor }
+    oracion: [], // array de { tipo: 'letra' | 'espacio', valor }
+    ultimaLecturaSensor: [null, null, null, null, null] // timestamp del último dato de cada dedo
 };
 
 const NOMBRES_DEDOS = ["Pulgar", "Índice", "Medio", "Anular", "Meñique"];
 const MS_ESTABILIDAD = 550; // tiempo que una letra debe mantenerse para confirmarse en la cinta
+const MS_LIMITE_SENSOR = 2500; // si un dedo no manda dato en este tiempo, se marca "sin lectura"
 
 /* --------------------------------------------------------
    3) REFERENCIAS DEL DOM
@@ -103,6 +105,8 @@ async function conectarGuante() {
 
 function alDesconectar() {
     actualizarEstadoConexion("desconectado");
+    estado.ultimaLecturaSensor = [null, null, null, null, null];
+    document.querySelectorAll(".sensor-tarjeta").forEach(marcarSensorError);
 }
 
 function actualizarEstadoConexion(tipo, nombre = "") {
@@ -156,16 +160,52 @@ function alRecibirDatos(evento) {
 
 function actualizarSensores(valores) {
     const tarjetas = document.querySelectorAll(".sensor-tarjeta");
+    const ahora = Date.now();
+
     tarjetas.forEach((tarjeta, i) => {
-        const crudo = Number(valores[i]) || 0;
+        const crudo = valores[i];
+
+        // sin dato para este dedo en el paquete recibido -> error
+        if (crudo === undefined || crudo === null || crudo === "" || Number.isNaN(Number(crudo))) {
+            marcarSensorError(tarjeta);
+            return;
+        }
+
         // normaliza: si viene en escala ADC (0-4095), lo pasamos a %; si ya es 0-100, lo dejamos
         const porcentaje = crudo > 100 ? Math.round((crudo / 4095) * 100) : Math.round(crudo);
         const acotado = Math.max(0, Math.min(100, porcentaje));
 
-        tarjeta.querySelector(".sensor-barra-relleno").style.width = `${acotado}%`;
-        tarjeta.querySelector(".sensor-valor").textContent = acotado;
+        marcarSensorOk(tarjeta, acotado);
+        estado.ultimaLecturaSensor[i] = ahora;
     });
 }
+
+function marcarSensorOk(tarjeta, valor) {
+    tarjeta.classList.remove("error");
+    tarjeta.querySelector(".sensor-barra-relleno").style.width = `${valor}%`;
+    tarjeta.querySelector(".sensor-valor").textContent = valor;
+}
+
+function marcarSensorError(tarjeta) {
+    tarjeta.classList.add("error");
+}
+
+/* Revisa periódicamente si algún dedo dejó de mandar datos
+   (por ejemplo, un sensor desconectado del guante) y lo marca
+   con el mensaje de error, aunque los demás sigan llegando bien. */
+setInterval(() => {
+    if (!estado.dispositivo || !estado.dispositivo.gatt.connected) return;
+
+    const tarjetas = document.querySelectorAll(".sensor-tarjeta");
+    const ahora = Date.now();
+
+    tarjetas.forEach((tarjeta, i) => {
+        const ultima = estado.ultimaLecturaSensor[i];
+        if (ultima === null || (ahora - ultima) > MS_LIMITE_SENSOR) {
+            marcarSensorError(tarjeta);
+        }
+    });
+}, 1000);
 
 /* --------------------------------------------------------
    6) LÓGICA DE LETRA -> ORACIÓN
@@ -235,9 +275,3 @@ function renderizarCinta() {
     cinta.parentElement.scrollLeft = cinta.parentElement.scrollWidth;
 }
 
-/* --------------------------------------------------------
-   8) MENÚ HAMBURGUESA (placeholder simple)
--------------------------------------------------------- */
-document.getElementById("btn").addEventListener("click", () => {
-    document.querySelector(".menu").classList.toggle("menu-abierto");
-});
