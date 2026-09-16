@@ -108,7 +108,37 @@ document.getElementById("btnAbrirCalibracion").addEventListener("click", () => {
 document.getElementById("btnVolver").addEventListener("click", () => {
     pantallaCalibracion.classList.add("oculto");
     pantallaPrincipal.classList.remove("oculto");
+    salirModoAislado();
 });
+
+// Botón "Verificar" de cada tarjeta: resalta ese sensor y atenúa los demás,
+// para poder mover un solo dedo por vez sin que los otros 4 números
+// cambiando al mismo tiempo hagan confuso saber cuál es cuál.
+const grillaSensoresEl = document.getElementById("grillaSensores");
+
+document.querySelectorAll(".btn-verificar").forEach(boton => {
+    boton.addEventListener("click", () => {
+        const tarjeta = boton.closest(".sensor-tarjeta");
+        const yaActiva = tarjeta.classList.contains("verificando");
+
+        if (yaActiva) {
+            salirModoAislado();
+        } else {
+            document.querySelectorAll(".sensor-tarjeta").forEach(t => t.classList.remove("verificando"));
+            document.querySelectorAll(".btn-verificar").forEach(b => b.textContent = "Verificar");
+
+            tarjeta.classList.add("verificando");
+            boton.textContent = "Dejar de verificar";
+            grillaSensoresEl.classList.add("modo-aislado");
+        }
+    });
+});
+
+function salirModoAislado() {
+    grillaSensoresEl.classList.remove("modo-aislado");
+    document.querySelectorAll(".sensor-tarjeta").forEach(t => t.classList.remove("verificando"));
+    document.querySelectorAll(".btn-verificar").forEach(b => b.textContent = "Verificar");
+}
 
 /* --------------------------------------------------------
    4) CONEXIÓN BLUETOOTH
@@ -222,19 +252,14 @@ function actualizarSensores(valores) {
             return;
         }
 
-        // normaliza: si viene en escala ADC (0-4095), lo pasamos a %; si ya es 0-100, lo dejamos
-        const porcentaje = crudo > 100 ? Math.round((crudo / 4095) * 100) : Math.round(crudo);
-        const acotado = Math.max(0, Math.min(100, porcentaje));
-
-        marcarSensorOk(tarjeta, acotado);
+        marcarSensorOk(tarjeta, Math.round(Number(crudo)));
         estado.ultimaLecturaSensor[i] = ahora;
     });
 }
 
-function marcarSensorOk(tarjeta, valor) {
+function marcarSensorOk(tarjeta, valorCrudo) {
     tarjeta.classList.remove("error");
-    tarjeta.querySelector(".sensor-barra-relleno").style.width = `${valor}%`;
-    tarjeta.querySelector(".sensor-valor").textContent = valor;
+    tarjeta.querySelector(".sensor-valor-crudo").textContent = valorCrudo;
 }
 
 function marcarSensorError(tarjeta) {
@@ -325,3 +350,4 @@ function renderizarCinta() {
     cinta.appendChild(cintaCursor);
     cinta.parentElement.scrollLeft = cinta.parentElement.scrollWidth;
 }
+
