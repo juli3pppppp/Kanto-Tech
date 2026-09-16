@@ -509,38 +509,62 @@ section{
 .sensor-tarjeta{
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    align-items: center;
+    gap: 6px;
     background-color: var(--crema);
     border-radius: var(--radio-suave);
-    padding: 14px 16px;
+    padding: 20px 16px;
+    text-align: center;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.btn-verificar{
+    margin-top: 6px;
+    font-family: var(--fuente-cuerpo);
+    font-weight: 600;
+    font-size: 0.72rem;
+    padding: 6px 14px;
+    border-radius: var(--radio-pastilla);
+    border: 1.5px solid var(--rosa-fuerte);
+    background: transparent;
+    color: var(--rosa-fuerte);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.btn-verificar:hover{
+    background-color: var(--rosa-fuerte);
+    color: var(--blanco);
+}
+
+.sensor-tarjeta.verificando .btn-verificar{
+    background-color: var(--rosa-fuerte);
+    color: var(--blanco);
+}
+
+/* Modo aislado: se resalta la tarjeta en verificación y se atenúan las demás */
+.grilla-sensores.modo-aislado .sensor-tarjeta:not(.verificando){
+    opacity: 0.3;
+    transform: scale(0.97);
+}
+
+.grilla-sensores.modo-aislado .sensor-tarjeta.verificando{
+    box-shadow: var(--sombra-suave);
+    transform: scale(1.03);
 }
 
 .sensor-nombre{
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     font-weight: 700;
     color: var(--ciruela);
 }
 
-.sensor-barra{
-    width: 100%;
-    height: 8px;
-    border-radius: var(--radio-pastilla);
-    background-color: var(--pista-barra);
-    overflow: hidden;
-}
-
-.sensor-barra-relleno{
-    height: 100%;
-    background-color: var(--rosa-fuerte);
-    border-radius: var(--radio-pastilla);
-    transition: width 0.25s ease;
-}
-
-.sensor-valor{
-    align-self: flex-end;
-    font-size: 0.78rem;
-    font-weight: 600;
+.sensor-valor-crudo{
+    font-family: var(--fuente-display);
+    font-size: 2rem;
+    font-weight: 700;
     color: var(--rosa-fuerte);
+    line-height: 1.1;
 }
 
 .sensor-error-msg{
@@ -557,8 +581,7 @@ section{
     border: 1.5px dashed var(--rosa-fuerte);
 }
 
-.sensor-tarjeta.error .sensor-barra,
-.sensor-tarjeta.error .sensor-valor{
+.sensor-tarjeta.error .sensor-valor-crudo{
     display: none;
 }
 
