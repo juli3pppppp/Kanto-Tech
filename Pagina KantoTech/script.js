@@ -289,8 +289,42 @@ setInterval(() => {
    paquete BLE, sólo se confirma una letra en el renglón
    cuando se mantiene estable un ratito (MS_ESTABILIDAD).
 -------------------------------------------------------- */
+// Qué mostrar como imagen/ícono para cada seña reconocida. Por ahora
+// usa emojis (funcionan ya, sin subir nada). Para usar fotos reales:
+// poné los archivos en imagenes/ (ej. imagenes/piedra.png) y cambiá
+// cada línea de acá por la ruta del archivo — más abajo en
+// actualizarImagenSeña() ya está el código que decide si mostrar
+// emoji o <img>, dependiendo de qué le pongas en este objeto.
+const IMAGENES_SEÑA = {
+    "PIEDRA":  "✊",
+    "PAPEL":   "✋",
+    "TIJERAS": "✌️"
+};
+
+function actualizarImagenSeña(letra) {
+    const contenido = IMAGENES_SEÑA[letra];
+    const imagenEl = document.getElementById("imagenSeña");
+
+    if (!contenido) {
+        imagenEl.innerHTML = "";
+        return;
+    }
+
+    // Si lo que pusiste en IMAGENES_SEÑA termina en una extensión de
+    // imagen, se muestra como <img>; si no, se asume que es un emoji
+    // o texto y se muestra directo.
+    const esArchivoDeImagen = /\.(png|jpg|jpeg|svg|webp|gif)$/i.test(contenido);
+
+    if (esArchivoDeImagen) {
+        imagenEl.innerHTML = `<img src="${contenido}" alt="${letra}">`;
+    } else {
+        imagenEl.textContent = contenido;
+    }
+}
+
 function procesarLetraDetectada(letra) {
     letraActualEl.textContent = letra || "–";
+    actualizarImagenSeña(letra);
 
     if (letra === estado.ultimaLetraCruda) return;
     estado.ultimaLetraCruda = letra;
