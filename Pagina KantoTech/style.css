@@ -383,6 +383,18 @@ section{
     margin-bottom: 20px;
 }
 
+.imagen-seña{
+    font-size: 2.6rem;
+    line-height: 1;
+}
+
+.imagen-seña img{
+    display: block;
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+}
+
 .letra-actual{
     font-family: var(--fuente-display);
     font-size: 3.4rem;
