@@ -289,16 +289,14 @@ setInterval(() => {
    paquete BLE, sólo se confirma una letra en el renglón
    cuando se mantiene estable un ratito (MS_ESTABILIDAD).
 -------------------------------------------------------- */
-// Qué mostrar como imagen/ícono para cada seña reconocida. Por ahora
-// usa emojis (funcionan ya, sin subir nada). Para usar fotos reales:
-// poné los archivos en imagenes/ (ej. imagenes/piedra.png) y cambiá
-// cada línea de acá por la ruta del archivo — más abajo en
-// actualizarImagenSeña() ya está el código que decide si mostrar
-// emoji o <img>, dependiendo de qué le pongas en este objeto.
+// Qué mostrar como imagen para cada seña reconocida. Vacío por ahora:
+// cuando calibres y tengas tus propias imágenes, poné los archivos en
+// imagenes/ (ej. imagenes/piedra.png) y agregalos acá así:
+// "PIEDRA": "imagenes/piedra.png",
 const IMAGENES_SEÑA = {
-    "PIEDRA":  "✊",
-    "PAPEL":   "✋",
-    "TIJERAS": "✌️"
+    "PIEDRA":  "",
+    "PAPEL":   "",
+    "TIJERAS": ""
 };
 
 function actualizarImagenSeña(letra) {
