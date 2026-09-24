@@ -296,7 +296,8 @@ setInterval(() => {
 const IMAGENES_SEÑA = {
     "PIEDRA":  "",
     "PAPEL":   "",
-    "TIJERAS": ""
+    "TIJERAS": "",
+    "FUCKU": "imagenes/fuck-you-cat.png"
 };
 
 function actualizarImagenSeña(letra) {
