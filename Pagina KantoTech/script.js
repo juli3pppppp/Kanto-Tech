@@ -301,7 +301,8 @@ const IMAGENES_SEÑA = {
     "PIEDRA":  "",
     "PAPEL":   "",
     "TIJERAS": "",
-    "HOLA":    ""
+    "HOLA":    "",
+    "FUCKU": "fuck-you-cat.png"
 };
 
 function actualizarImagenSeña(letra) {
