@@ -302,7 +302,7 @@ const IMAGENES_SEÑA = {
     "PAPEL":   "",
     "TIJERAS": "",
     "HOLA":    "",
-    "FUCKU": "imagenes/fuck-you-cat.png"
+    "FUCK U": "imagenes/fuck-you-cat.png"
 };
 
 function actualizarImagenSeña(letra) {
