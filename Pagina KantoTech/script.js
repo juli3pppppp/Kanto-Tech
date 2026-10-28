@@ -95,6 +95,10 @@ chkModoOscuro.addEventListener("change", () => {
 
 function aplicarModoOscuro(activo) {
     document.documentElement.setAttribute("data-tema", activo ? "oscuro" : "claro");
+
+    // que la barra superior del celular (modo app instalada) combine con el tema
+    const metaTema = document.querySelector('meta[name="theme-color"]');
+    if (metaTema) metaTema.setAttribute("content", activo ? "#2f5d8b" : "#e14778");
 }
 
 // Verificación y calibración de sensores: ahora es una pantalla aparte
@@ -297,7 +301,7 @@ const IMAGENES_SEÑA = {
     "PIEDRA":  "",
     "PAPEL":   "",
     "TIJERAS": "",
-    "FUCKU": "imagenes/fuck-you-cat.png"
+    "HOLA":    ""
 };
 
 function actualizarImagenSeña(letra) {
