@@ -65,8 +65,21 @@ btnBluetooth.addEventListener("click", () => {
 const btnConfig = document.getElementById("btnConfig");
 const panelConfig = document.getElementById("panelConfig");
 const chkModoOscuro = document.getElementById("chkModoOscuro");
-const pantallaPrincipal = document.getElementById("pantallaPrincipal");
-const pantallaCalibracion = document.getElementById("pantallaCalibracion");
+const pantallas = document.querySelectorAll(".pantalla");
+
+function cerrarMenuConfig() {
+    panelConfig.classList.add("oculto");
+    btnConfig.classList.remove("activo");
+    btnConfig.setAttribute("aria-expanded", "false");
+}
+
+// Muestra una sola pantalla y oculta las demás
+function mostrarPantalla(id) {
+    pantallas.forEach(p => p.classList.toggle("oculto", p.id !== id));
+    cerrarMenuConfig();
+    if (id !== "pantallaVerificacion") salirModoAislado();
+    window.scrollTo({ top: 0 });
+}
 
 btnConfig.addEventListener("click", (evento) => {
     evento.stopPropagation();
@@ -101,19 +114,11 @@ function aplicarModoOscuro(activo) {
     if (metaTema) metaTema.setAttribute("content", activo ? "#2f5d8b" : "#e14778");
 }
 
-// Verificación y calibración de sensores: ahora es una pantalla aparte
-document.getElementById("btnAbrirCalibracion").addEventListener("click", () => {
-    pantallaPrincipal.classList.add("oculto");
-    pantallaCalibracion.classList.remove("oculto");
-    panelConfig.classList.add("oculto");
-    btnConfig.classList.remove("activo");
-});
-
-document.getElementById("btnVolver").addEventListener("click", () => {
-    pantallaCalibracion.classList.add("oculto");
-    pantallaPrincipal.classList.remove("oculto");
-    salirModoAislado();
-});
+// Verificación y calibración de sensores: cada una es una pantalla aparte
+document.getElementById("btnAbrirVerificacion").addEventListener("click", () => mostrarPantalla("pantallaVerificacion"));
+document.getElementById("btnAbrirCalibracion").addEventListener("click", () => mostrarPantalla("pantallaCalibracion"));
+document.getElementById("btnVolverVerificacion").addEventListener("click", () => mostrarPantalla("pantallaPrincipal"));
+document.getElementById("btnVolverCalibracion").addEventListener("click", () => mostrarPantalla("pantallaPrincipal"));
 
 // Botón "Verificar" de cada tarjeta: resalta ese sensor y atenúa los demás,
 // para poder mover un solo dedo por vez sin que los otros 4 números
@@ -301,28 +306,48 @@ const IMAGENES_SEÑA = {
     "PIEDRA":  "",
     "PAPEL":   "",
     "TIJERAS": "",
-    "HOLA":    "",
-    "FUCK U": "imagenes/fuck-you-cat.png"
+    "HOLA":    ""
 };
+
+// true  = si la seña tiene imagen, se muestra SOLO la imagen (sin la palabra).
+// false = se muestra la imagen y también la palabra.
+// Las señas que NO tienen imagen cargada siguen mostrando la palabra igual.
+const MOSTRAR_SOLO_IMAGEN = true;
+
+function esArchivoDeImagen(contenido) {
+    return /\.(png|jpg|jpeg|svg|webp|gif)$/i.test(contenido);
+}
 
 function actualizarImagenSeña(letra) {
     const contenido = IMAGENES_SEÑA[letra];
     const imagenEl = document.getElementById("imagenSeña");
+    const cajaEl = imagenEl.closest(".letra-actual-caja");
 
-    if (!contenido) {
-        imagenEl.innerHTML = "";
-        return;
-    }
+    imagenEl.innerHTML = "";
+    cajaEl.classList.remove("solo-imagen");
 
-    // Si lo que pusiste en IMAGENES_SEÑA termina en una extensión de
-    // imagen, se muestra como <img>; si no, se asume que es un emoji
-    // o texto y se muestra directo.
-    const esArchivoDeImagen = /\.(png|jpg|jpeg|svg|webp|gif)$/i.test(contenido);
+    if (!contenido) return;
 
-    if (esArchivoDeImagen) {
-        imagenEl.innerHTML = `<img src="${contenido}" alt="${letra}">`;
+    const ocultarPalabra = () => {
+        if (MOSTRAR_SOLO_IMAGEN) cajaEl.classList.add("solo-imagen");
+    };
+
+    if (esArchivoDeImagen(contenido)) {
+        const img = document.createElement("img");
+        img.alt = letra;
+        // si el archivo no carga (ruta o nombre mal escrito), se vuelve a
+        // mostrar la palabra para que no quede la pantalla vacía
+        img.onerror = () => {
+            imagenEl.innerHTML = "";
+            cajaEl.classList.remove("solo-imagen");
+        };
+        img.src = contenido;
+        imagenEl.appendChild(img);
+        ocultarPalabra();
     } else {
+        // no es un archivo: se asume emoji o texto corto
         imagenEl.textContent = contenido;
+        ocultarPalabra();
     }
 }
 
@@ -382,10 +407,156 @@ function renderizarCinta() {
     estado.oracion.forEach(item => {
         const span = document.createElement("span");
         span.className = item.tipo === "espacio" ? "cinta-letra espacio" : "cinta-letra";
-        span.textContent = item.tipo === "espacio" ? "" : item.valor;
+
+        const contenido = item.tipo === "letra" ? IMAGENES_SEÑA[item.valor] : "";
+
+        if (MOSTRAR_SOLO_IMAGEN && contenido && esArchivoDeImagen(contenido)) {
+            span.classList.add("con-imagen");
+            const img = document.createElement("img");
+            img.alt = item.valor;
+            // si la imagen no carga, la ficha vuelve a mostrar la palabra
+            img.onerror = () => {
+                span.classList.remove("con-imagen");
+                span.textContent = item.valor;
+            };
+            img.src = contenido;
+            span.appendChild(img);
+        } else if (MOSTRAR_SOLO_IMAGEN && contenido) {
+            span.textContent = contenido; // emoji
+        } else {
+            span.textContent = item.tipo === "espacio" ? "" : item.valor;
+        }
         cinta.appendChild(span);
     });
     cinta.appendChild(cintaCursor);
     cinta.parentElement.scrollLeft = cinta.parentElement.scrollWidth;
 }
 
+/* --------------------------------------------------------
+   9) MANUALES DESCARGABLES (usuario y mantenimiento)
+   Los PDF van en la carpeta "manuales/", al lado de index.html.
+   Si cambiás el nombre de un archivo, cambialo también acá.
+-------------------------------------------------------- */
+const MANUALES = {
+    usuario: {
+        titulo: "Manual de usuario",
+        texto: "Descargá el manual de usuario de KantoTech para aprender a conectar y usar tu guante.",
+        archivo: "manuales/manual-de-usuario.pdf",
+        nombreDescarga: "KantoTech-Manual-de-usuario.pdf"
+    },
+    mantenimiento: {
+        titulo: "Manual de mantenimiento",
+        texto: "Descargá el manual de mantenimiento de KantoTech para saber cómo cuidar tu guante.",
+        archivo: "manuales/manual-de-mantenimiento.pdf",
+        nombreDescarga: "KantoTech-Manual-de-mantenimiento.pdf"
+    }
+};
+
+const modalManual = document.getElementById("modalManual");
+const modalTitulo = document.getElementById("modalManualTitulo");
+const modalPortada = document.getElementById("modalManualPortada");
+const modalTexto = document.getElementById("modalManualTexto");
+const modalDescarga = document.getElementById("modalManualDescarga");
+const modalAviso = document.getElementById("modalManualAviso");
+const modalCerrarX = document.getElementById("modalManualX");
+
+let tokenVerificacion = 0;   // evita que una comprobación vieja pise a la actual
+let botonQueAbrio = null;    // para devolverle el foco al cerrar
+
+// Comprueba que el PDF exista, para no mandar a la persona a una página de error.
+async function manualDisponible(ruta) {
+    try {
+        if (window.caches) {
+            const guardado = await caches.match(ruta);   // sirve también sin internet
+            if (guardado) return true;
+        }
+        const respuesta = await fetch(ruta, { method: "HEAD", cache: "no-store" });
+        const tipo = respuesta.headers.get("content-type") || "";
+        return respuesta.ok && !tipo.includes("text/html");
+    } catch (_) {
+        return false;
+    }
+}
+
+function abrirManual(clave, origen) {
+    const manual = MANUALES[clave];
+    if (!manual) return;
+
+    botonQueAbrio = origen || null;
+    modalTitulo.textContent = manual.titulo;
+    modalPortada.textContent = manual.titulo;
+    modalTexto.textContent = manual.texto;
+    modalDescarga.href = manual.archivo;
+    modalDescarga.setAttribute("download", manual.nombreDescarga);
+    modalDescarga.classList.remove("deshabilitado");
+    modalDescarga.removeAttribute("aria-disabled");
+    modalAviso.classList.add("oculto");
+
+    modalManual.classList.remove("oculto");
+    document.body.classList.add("modal-abierto");
+    modalCerrarX.focus();
+
+    const miToken = ++tokenVerificacion;
+    manualDisponible(manual.archivo).then(existe => {
+        if (miToken !== tokenVerificacion || modalManual.classList.contains("oculto")) return;
+        if (!existe) {
+            modalDescarga.classList.add("deshabilitado");
+            modalDescarga.setAttribute("aria-disabled", "true");
+            modalAviso.classList.remove("oculto");
+        }
+    });
+}
+
+function cerrarManual() {
+    if (modalManual.classList.contains("oculto")) return;
+    tokenVerificacion++;
+    modalManual.classList.add("oculto");
+    document.body.classList.remove("modal-abierto");
+    if (botonQueAbrio) botonQueAbrio.focus();
+}
+
+document.querySelectorAll(".tarjeta-manual").forEach(tarjeta => {
+    tarjeta.addEventListener("click", () => abrirManual(tarjeta.dataset.manual, tarjeta));
+});
+
+modalCerrarX.addEventListener("click", cerrarManual);
+document.getElementById("modalManualCerrar").addEventListener("click", cerrarManual);
+
+// clic en el fondo oscuro (fuera de la ventana) también cierra
+modalManual.addEventListener("click", (evento) => {
+    if (evento.target === modalManual) cerrarManual();
+});
+
+modalDescarga.addEventListener("click", (evento) => {
+    if (modalDescarga.classList.contains("deshabilitado")) evento.preventDefault();
+});
+
+document.addEventListener("keydown", (evento) => {
+    if (modalManual.classList.contains("oculto")) return;
+
+    if (evento.key === "Escape") {
+        cerrarManual();
+        return;
+    }
+
+    // Tab dentro de la ventana: el foco no se escapa hacia el resto de la página
+    if (evento.key === "Tab") {
+        const enfocables = modalManual.querySelectorAll("button, a[href]:not(.deshabilitado)");
+        if (enfocables.length === 0) return;
+        const primero = enfocables[0];
+        const ultimo = enfocables[enfocables.length - 1];
+
+        if (evento.shiftKey && document.activeElement === primero) {
+            evento.preventDefault();
+            ultimo.focus();
+        } else if (!evento.shiftKey && document.activeElement === ultimo) {
+            evento.preventDefault();
+            primero.focus();
+        }
+    }
+});
+
+/* --------------------------------------------------------
+   10) FOOTER: año actual
+-------------------------------------------------------- */
+document.getElementById("anioPie").textContent = new Date().getFullYear();
