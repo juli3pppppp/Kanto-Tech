@@ -5,9 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KantoTech · Guante Traductor</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=MuseoModerno:wght@100..900&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- PWA: permite instalar la página como app y usarla sin internet -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#e14778">
+    <link rel="icon" type="image/png" href="iconos/icono-192.png">
+    <link rel="apple-touch-icon" href="iconos/apple-touch-icon.png">
 </head>
 <body>
 
@@ -43,8 +46,11 @@
                                 <span class="interruptor-riel"></span>
                             </label>
                         </div>
+                        <button id="btnAbrirVerificacion" class="config-opcion">
+                            Verificación de sensores
+                        </button>
                         <button id="btnAbrirCalibracion" class="config-opcion">
-                            Verificación y calibración de sensores
+                            Calibración de sensores
                         </button>
                     </div>
                 </div>
@@ -88,14 +94,37 @@
                 </div>
             </section>
 
+            <section class="panel-manuales">
+                <p class="eyebrow">Manuales</p>
+                <p class="ayuda-conexion">Descargá la documentación del guante en PDF.</p>
+
+                <div class="grilla-manuales">
+                    <button class="tarjeta-manual" data-manual="usuario">
+                        <span class="tarjeta-manual-icono" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+                        </span>
+                        <span class="tarjeta-manual-titulo">Manual de usuario</span>
+                        <span class="tarjeta-manual-accion">Ver y descargar</span>
+                    </button>
+
+                    <button class="tarjeta-manual" data-manual="mantenimiento">
+                        <span class="tarjeta-manual-icono" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+                        </span>
+                        <span class="tarjeta-manual-titulo">Manual de mantenimiento</span>
+                        <span class="tarjeta-manual-accion">Ver y descargar</span>
+                    </button>
+                </div>
+            </section>
+
         </div>
 
-        <div id="pantallaCalibracion" class="pantalla oculto">
+        <div id="pantallaVerificacion" class="pantalla oculto">
 
             <section class="panel-sensores">
                 <div class="calibracion-encabezado">
-                    <p class="eyebrow">Verificación y calibración</p>
-                    <button id="btnVolver" class="btn-accion btn-fantasma">← Volver</button>
+                    <p class="eyebrow">Verificación de sensores</p>
+                    <button id="btnVolverVerificacion" class="btn-accion btn-fantasma">← Volver</button>
                 </div>
                 <p class="ayuda-conexion">Revisá acá que cada sensor esté mandando datos correctamente antes de usar el guante.</p>
 
@@ -135,8 +164,86 @@
 
         </div>
 
+        <div id="pantallaCalibracion" class="pantalla oculto">
+
+            <section class="panel-calibracion">
+                <div class="calibracion-encabezado">
+                    <p class="eyebrow">Calibración de sensores</p>
+                    <button id="btnVolverCalibracion" class="btn-accion btn-fantasma">← Volver</button>
+                </div>
+            </section>
+
+        </div>
+
     </div>
 
+    <!-- Ventana para ver y descargar un manual -->
+    <div id="modalManual" class="modal oculto" role="dialog" aria-modal="true" aria-labelledby="modalManualTitulo">
+        <div class="modal-caja">
+            <button id="modalManualX" class="modal-cerrar" aria-label="Cerrar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+            </button>
+
+            <h2 id="modalManualTitulo" class="modal-titulo"></h2>
+
+            <div class="modal-separador" aria-hidden="true">
+                <span></span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span></span>
+            </div>
+
+            <div class="portada-manual" aria-hidden="true">
+                <img src="imagenes/logo.recortado.png" alt="">
+                <span id="modalManualPortada" class="portada-manual-titulo"></span>
+                <span class="portada-manual-marca">KantoTech</span>
+            </div>
+
+            <p id="modalManualTexto" class="modal-texto"></p>
+
+            <a id="modalManualDescarga" class="btn-descarga" href="#" download>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Descargar PDF
+            </a>
+
+            <p id="modalManualAviso" class="modal-aviso oculto">Este manual todavía no está disponible. Probá de nuevo más tarde.</p>
+
+            <button id="modalManualCerrar" class="btn-accion btn-fantasma">Cerrar</button>
+        </div>
+    </div>
+
+    <footer class="pie">
+        <div class="pie-contenido">
+            <div class="pie-marca">
+                <img src="imagenes/logo.recortado.png" class="pie-logo" alt="">
+                <span>KantoTech</span>
+            </div>
+
+            <div class="pie-contacto">
+                <p class="pie-titulo">Contacto</p>
+
+                <a href="mailto:kanto.tech.cont@gmail.com">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    kanto.tech.cont@gmail.com
+                </a>
+
+                <a href="https://www.instagram.com/kanto.tech.et28/" target="_blank" rel="noopener noreferrer">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                    @kanto.tech.et28
+                </a>
+            </div>
+        </div>
+
+        <p class="pie-copy">© <span id="anioPie">2026</span> KantoTech. Todos los derechos reservados.</p>
+    </footer>
+
     <script src="script.js"></script>
+    <script>
+        // Registra el service worker (guarda la app para uso sin internet)
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker.register("sw.js").catch((e) => console.warn("SW no registrado:", e));
+            });
+        }
+    </script>
 </body>
 </html>
