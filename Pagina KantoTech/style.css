@@ -1018,3 +1018,276 @@ body.modal-abierto{
         flex-direction: column;
     }
 }
+
+/* ======================= CALIBRACIÓN DE SEÑAS (biblioteca + ventana) ======================= */
+
+[hidden]{
+    display: none !important;
+}
+
+.acciones-biblioteca{
+    display: flex;
+    margin-top: 18px;
+}
+
+.acciones-biblioteca .btn-relleno{
+    margin-left: 0;
+}
+
+.btn-accion:disabled{
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.aviso-calibracion{
+    margin-top: 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--acento-texto);
+}
+
+/* ---------- Biblioteca ---------- */
+
+.lista-biblioteca{
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.biblioteca-item{
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    padding: 12px 16px;
+    background-color: var(--crema);
+    border-radius: var(--radio-suave);
+}
+
+.biblioteca-nombre{
+    font-family: var(--fuente-display);
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--ciruela);
+    min-width: 3ch;
+}
+
+.biblioteca-etiquetas{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    flex: 1;
+}
+
+.etiqueta{
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    padding: 4px 10px;
+    border-radius: var(--radio-pastilla);
+    background-color: var(--pista-barra);
+    color: var(--ciruela);
+}
+
+.etiqueta-fabrica{
+    background-color: transparent;
+    border: 1.5px solid var(--acento-texto);
+    color: var(--acento-texto);
+}
+
+.btn-borrar-sena{
+    font-family: var(--fuente-cuerpo);
+    font-weight: 600;
+    font-size: 0.72rem;
+    padding: 6px 14px;
+    border-radius: var(--radio-pastilla);
+    border: 1.5px solid var(--acento-texto);
+    background: transparent;
+    color: var(--acento-texto);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.btn-borrar-sena:hover{
+    background-color: var(--rosa-fuerte);
+    color: var(--blanco);
+}
+
+/* ---------- Ventana "Agregar seña" ---------- */
+
+.cal-paso{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.cal-campo{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-align: left;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--ciruela);
+}
+
+.cal-campo input{
+    font-family: var(--fuente-display);
+    font-size: 1.3rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    border-radius: var(--radio-suave);
+    border: 1.5px solid var(--linea-menu);
+    background-color: var(--hover-menu);
+    color: var(--ciruela);
+}
+
+.cal-campo input:focus{
+    outline: 2px solid var(--rosa-fuerte);
+    outline-offset: 1px;
+}
+
+.cal-tipos{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: none;
+    text-align: left;
+}
+
+.cal-tipos legend{
+    margin-bottom: 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--ciruela);
+}
+
+.cal-tipo{
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: var(--radio-suave);
+    border: 1.5px solid var(--linea-menu);
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: var(--ciruela);
+    cursor: pointer;
+}
+
+.cal-tipo:has(input:checked){
+    border-color: var(--rosa-fuerte);
+    background-color: var(--hover-menu);
+}
+
+.cal-tipo input{
+    margin-top: 3px;
+    accent-color: var(--rosa-fuerte);
+}
+
+.cal-botones{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.cal-botones .btn-relleno{
+    margin-left: 0;
+}
+
+.cal-cuenta{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+    min-height: 120px;
+    padding: 0 18px;
+    border-radius: 60px;
+    background-color: var(--hover-menu);
+    border: 3px solid var(--rosa-fuerte);
+    font-family: var(--fuente-display);
+    font-weight: 700;
+    font-size: 3.6rem;
+    color: var(--acento-texto);
+}
+
+.cal-cuenta.ahora{
+    font-size: 1.8rem;
+    background-color: var(--rosa-fuerte);
+    color: var(--blanco);
+}
+
+.cal-progreso-caja{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.cal-barra{
+    width: 100%;
+    height: 14px;
+    border-radius: var(--radio-pastilla);
+    background-color: var(--pista-barra);
+    overflow: hidden;
+}
+
+.cal-barra span{
+    display: block;
+    height: 100%;
+    width: 0%;
+    border-radius: var(--radio-pastilla);
+    background-color: var(--rosa-fuerte);
+    transition: width 0.2s ease;
+}
+
+.cal-contador{
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--ciruela);
+}
+
+.cal-aviso-quieto{
+    font-size: 0.78rem;
+    opacity: 0.75;
+    color: var(--ciruela);
+}
+
+.cal-resultado-icono{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--blanco);
+}
+
+.cal-resultado-icono.ok{
+    background-color: var(--rosa-fuerte);
+}
+
+.cal-resultado-icono.error{
+    background-color: var(--ciruela);
+    color: var(--superficie-menu);
+}
+
+@media (prefers-reduced-motion: reduce){
+    .cal-barra span{
+        transition: none;
+    }
+}
