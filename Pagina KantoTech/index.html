@@ -171,6 +171,19 @@
                     <p class="eyebrow">Calibración de sensores</p>
                     <button id="btnVolverCalibracion" class="btn-accion btn-fantasma">← Volver</button>
                 </div>
+                <p class="ayuda-conexion">Enseñale al guante tus propias señas. Se guardan en el guante, así que te acompañan a donde lo uses.</p>
+
+                <div class="acciones-biblioteca">
+                    <button id="btnAgregarSena" class="btn-accion btn-relleno" disabled>+ Agregar seña</button>
+                </div>
+                <p id="avisoSinConexion" class="aviso-calibracion">Conectá el guante para agregar señas y ver tu biblioteca.</p>
+                <p id="avisoBiblioteca" class="aviso-calibracion" hidden></p>
+            </section>
+
+            <section class="panel-biblioteca">
+                <p class="eyebrow">Biblioteca de señas</p>
+                <p id="bibliotecaVacia" class="ayuda-conexion">Todavía no hay señas para mostrar.</p>
+                <ul id="listaBiblioteca" class="lista-biblioteca"></ul>
             </section>
 
         </div>
@@ -208,6 +221,72 @@
             <p id="modalManualAviso" class="modal-aviso oculto">Este manual todavía no está disponible. Probá de nuevo más tarde.</p>
 
             <button id="modalManualCerrar" class="btn-accion btn-fantasma">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- Ventana para agregar (calibrar) una seña nueva -->
+    <div id="modalCalibracion" class="modal oculto" role="dialog" aria-modal="true" aria-labelledby="calTitulo">
+        <div class="modal-caja">
+            <button id="calX" class="modal-cerrar" aria-label="Cerrar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+            </button>
+
+            <h2 id="calTitulo" class="modal-titulo">Agregar seña</h2>
+
+            <!-- Paso 1: nombre y tipo -->
+            <div id="calPasoForm" class="cal-paso">
+                <label class="cal-campo">
+                    <span>Nombre de la seña o letra</span>
+                    <input id="calNombre" type="text" maxlength="12" autocomplete="off" spellcheck="false" placeholder="Ej: A, HOLA">
+                </label>
+
+                <fieldset class="cal-tipos">
+                    <legend>Tipo de seña</legend>
+                    <label class="cal-tipo">
+                        <input type="radio" name="calTipo" value="0" checked>
+                        <span><strong>Mano quieta</strong> (la mayoría de las letras)</span>
+                    </label>
+                    <label class="cal-tipo">
+                        <input type="radio" name="calTipo" value="1">
+                        <span><strong>Con movimiento</strong> (como HOLA, J o Z)</span>
+                    </label>
+                </fieldset>
+
+                <p id="calErrorForm" class="modal-aviso" hidden></p>
+
+                <div class="cal-botones">
+                    <button id="calCancelarForm" class="btn-accion btn-fantasma">Cancelar</button>
+                    <button id="calEmpezar" class="btn-accion btn-relleno">Empezar calibración</button>
+                </div>
+            </div>
+
+            <!-- Paso 2: pantalla de espera -->
+            <div id="calPasoEspera" class="cal-paso" hidden>
+                <div id="calCuentaAtras" class="cal-cuenta" aria-live="assertive">3</div>
+                <p id="calInstruccion" class="modal-texto"></p>
+
+                <div id="calProgresoCaja" class="cal-progreso-caja" hidden>
+                    <div class="cal-barra" role="progressbar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0" id="calBarra">
+                        <span id="calBarraRelleno"></span>
+                    </div>
+                    <p id="calContador" class="cal-contador">Midiendo… 0 de 10</p>
+                    <p class="cal-aviso-quieto">No cierres esta ventana hasta que termine.</p>
+                </div>
+
+                <div class="cal-botones" id="calBotonesEspera">
+                    <button id="calCancelarEspera" class="btn-accion btn-fantasma">Cancelar</button>
+                </div>
+            </div>
+
+            <!-- Paso 3: resultado -->
+            <div id="calPasoResultado" class="cal-paso" hidden>
+                <div id="calResultadoIcono" class="cal-resultado-icono" aria-hidden="true"></div>
+                <p id="calResultadoTexto" class="modal-texto"></p>
+                <div class="cal-botones">
+                    <button id="calReintentar" class="btn-accion btn-fantasma" hidden>Reintentar</button>
+                    <button id="calListo" class="btn-accion btn-relleno">Listo</button>
+                </div>
+            </div>
         </div>
     </div>
 
