@@ -28,7 +28,8 @@ const estado = {
     ultimaLetraConfirmada: "",
     temporizadorEstabilidad: null,
     oracion: [], // array de { tipo: 'letra' | 'espacio', valor }
-    ultimaLecturaSensor: [null, null, null, null, null] // timestamp del último dato de cada dedo
+    ultimaLecturaSensor: [null, null, null, null, null], // timestamp del último dato de cada dedo
+    biblioteca: [] // señas guardadas en el guante: { nombre, movimiento, defecto }
 };
 
 const NOMBRES_DEDOS = ["Pulgar", "Índice", "Medio", "Anular", "Meñique"];
@@ -184,6 +185,9 @@ async function conectarGuante() {
 
         actualizarEstadoConexion("conectado", dispositivo.name);
 
+        // Al conectar, se le pide al guante su biblioteca de señas guardadas
+        pedirBiblioteca().catch(() => {});
+
     } catch (error) {
         console.error("No se pudo conectar:", error);
         actualizarEstadoConexion("desconectado");
@@ -194,9 +198,12 @@ async function conectarGuante() {
 }
 
 function alDesconectar() {
+    estado.caracteristicaRX = null;
+    estado.biblioteca = [];
     actualizarEstadoConexion("desconectado");
     estado.ultimaLecturaSensor = [null, null, null, null, null];
     document.querySelectorAll(".sensor-tarjeta").forEach(marcarSensorError);
+    calibracionPerdioConexion();
 }
 
 function actualizarEstadoConexion(tipo, nombre = "") {
@@ -219,6 +226,7 @@ function actualizarEstadoConexion(tipo, nombre = "") {
         estadoGrande.classList.remove("conectado");
         nombreDispositivoEl.textContent = "";
     }
+    actualizarUICalibracion();
 }
 
 /* --------------------------------------------------------
@@ -237,9 +245,18 @@ function alRecibirDatos(evento) {
 
     try {
         const datos = JSON.parse(texto);
+
+        // Mensajes de la biblioteca / calibración (traen "ev"): no son lecturas de sensores
+        if (datos.ev) {
+            procesarEventoGuante(datos);
+            return;
+        }
+
         letra = (datos.letra ?? datos.letter ?? datos.l ?? "").toString().toUpperCase();
         sensores = datos.flex ?? datos.sensores ?? datos.dedos ?? null;
     } catch (_) {
+        // un JSON cortado a mitad de camino no es una letra: se descarta
+        if (texto.startsWith("{")) return;
         // no era JSON: tratamos el texto recibido directamente como la letra
         letra = texto.toUpperCase();
     }
@@ -431,6 +448,371 @@ function renderizarCinta() {
     cinta.appendChild(cintaCursor);
     cinta.parentElement.scrollLeft = cinta.parentElement.scrollWidth;
 }
+
+/* --------------------------------------------------------
+   8) CALIBRACIÓN DE SEÑAS DESDE LA PÁGINA
+   Las señas se guardan en la memoria flash del propio guante (ESP32),
+   no en la página: la biblioteca viaja con el producto y no hace falta
+   cuenta ni internet. La página solo manda comandos por la
+   característica RX (texto plano) y muestra lo que el guante responde:
+
+     CAL|NOMBRE|M   calibrar (M = 0 mano quieta, 1 con movimiento)
+     LIST           pedir la biblioteca
+     DEL|NOMBRE     borrar una seña del usuario
+
+   El guante responde por TX con JSON que trae la clave "ev":
+     lista / sena / progreso / calibrado / borrado / error
+-------------------------------------------------------- */
+const MUESTRAS_CALIBRACION = 10;     // debe coincidir con el firmware
+const SEGUNDOS_PREPARACION = 3;      // cuenta atrás antes de empezar a medir
+const MS_ESPERA_RESPUESTA = 5000;    // si el guante no da señales en este tiempo, se avisa
+const MAX_CARACTERES_NOMBRE = 12;
+const MAX_BYTES_NOMBRE = 23;         // el firmware guarda hasta 23 bytes (UTF-8)
+
+const btnAgregarSena = document.getElementById("btnAgregarSena");
+const avisoSinConexion = document.getElementById("avisoSinConexion");
+const avisoBiblioteca = document.getElementById("avisoBiblioteca");
+const bibliotecaVacia = document.getElementById("bibliotecaVacia");
+const listaBiblioteca = document.getElementById("listaBiblioteca");
+
+const modalCal = document.getElementById("modalCalibracion");
+const calPasos = {
+    form: document.getElementById("calPasoForm"),
+    espera: document.getElementById("calPasoEspera"),
+    resultado: document.getElementById("calPasoResultado")
+};
+const calNombre = document.getElementById("calNombre");
+const calErrorForm = document.getElementById("calErrorForm");
+const calCuentaAtras = document.getElementById("calCuentaAtras");
+const calInstruccion = document.getElementById("calInstruccion");
+const calProgresoCaja = document.getElementById("calProgresoCaja");
+const calBarra = document.getElementById("calBarra");
+const calBarraRelleno = document.getElementById("calBarraRelleno");
+const calContador = document.getElementById("calContador");
+const calBotonesEspera = document.getElementById("calBotonesEspera");
+const calResultadoIcono = document.getElementById("calResultadoIcono");
+const calResultadoTexto = document.getElementById("calResultadoTexto");
+const calReintentar = document.getElementById("calReintentar");
+
+const cal = {
+    paso: "cerrado",     // cerrado | form | espera | resultado
+    midiendo: false,     // true desde que se mandó el comando hasta que el guante termina
+    nombre: "",
+    movimiento: false,
+    temporizador: null,  // cuenta atrás
+    vigilante: null      // detecta que el guante no responde
+};
+
+let temporizadorAvisoBiblioteca = null;
+
+function guanteListoParaComandos() {
+    return !!(estado.dispositivo && estado.dispositivo.gatt.connected && estado.caracteristicaRX);
+}
+
+async function enviarComando(texto) {
+    if (!guanteListoParaComandos()) throw new Error("Sin conexión con el guante");
+    const datos = new TextEncoder().encode(texto);
+    const rx = estado.caracteristicaRX;
+    if (rx.writeValueWithResponse) await rx.writeValueWithResponse(datos);
+    else await rx.writeValue(datos);
+}
+
+function pedirBiblioteca() {
+    return enviarComando("LIST");
+}
+
+const TEXTOS_ERROR_GUANTE = {
+    nombre:   "El nombre no es válido.",
+    mpu:      "El guante no detecta el sensor de movimiento (MPU6050). Revisá el cableado o elegí «Mano quieta».",
+    lleno:    "La biblioteca del guante está llena. Borrá alguna seña para poder agregar otra.",
+    sinmov:   "No se detectó movimiento. Intentá de nuevo y hacé el movimiento completo mientras el guante mide.",
+    defecto:  "Las señas de fábrica no se pueden borrar. Si querés cambiarla, calibrala de nuevo con el mismo nombre.",
+    noexiste: "Esa seña ya no está en el guante.",
+    timeout:  "El guante no respondió. Revisá la conexión e intentá de nuevo.",
+    envio:    "No se pudo enviar la orden al guante. Revisá la conexión e intentá de nuevo.",
+    conexion: "Se perdió la conexión con el guante."
+};
+
+function textoErrorGuante(codigo) {
+    return TEXTOS_ERROR_GUANTE[codigo] || "El guante devolvió un error. Intentá de nuevo.";
+}
+
+/* ---------- Eventos que llegan del guante ---------- */
+function procesarEventoGuante(d) {
+    switch (d.ev) {
+        case "lista":
+            estado.biblioteca = [];
+            renderizarBiblioteca();
+            break;
+
+        case "sena":
+            if (typeof d.n === "string") {
+                estado.biblioteca.push({ nombre: d.n, movimiento: !!d.m, defecto: !!d.d });
+                renderizarBiblioteca();
+            }
+            break;
+
+        case "progreso":
+            calibracionProgreso(Number(d.n) || 0, Number(d.t) || MUESTRAS_CALIBRACION);
+            break;
+
+        case "calibrado":
+            calibracionTerminada(d);
+            pedirBiblioteca().catch(() => {});
+            break;
+
+        case "borrado":
+            mostrarAvisoBiblioteca(`Se borró la seña «${d.n}».`);
+            pedirBiblioteca().catch(() => {});
+            break;
+
+        case "error":
+            if (cal.paso === "espera") calibracionError(d.c);
+            else mostrarAvisoBiblioteca(textoErrorGuante(d.c));
+            break;
+    }
+}
+
+/* ---------- Pantalla de calibración: botón, avisos y biblioteca ---------- */
+function actualizarUICalibracion() {
+    const listo = guanteListoParaComandos();
+    btnAgregarSena.disabled = !listo;
+    avisoSinConexion.hidden = listo;
+    renderizarBiblioteca();
+}
+
+function mostrarAvisoBiblioteca(texto) {
+    avisoBiblioteca.textContent = texto;
+    avisoBiblioteca.hidden = false;
+    clearTimeout(temporizadorAvisoBiblioteca);
+    temporizadorAvisoBiblioteca = setTimeout(() => { avisoBiblioteca.hidden = true; }, 6000);
+}
+
+function renderizarBiblioteca() {
+    listaBiblioteca.innerHTML = "";
+
+    if (!guanteListoParaComandos()) {
+        bibliotecaVacia.textContent = "Conectá el guante para ver las señas guardadas.";
+        bibliotecaVacia.hidden = false;
+        return;
+    }
+    if (estado.biblioteca.length === 0) {
+        bibliotecaVacia.textContent = "Todavía no hay señas para mostrar.";
+        bibliotecaVacia.hidden = false;
+        return;
+    }
+    bibliotecaVacia.hidden = true;
+
+    // primero las del usuario (A-Z) y después las de fábrica
+    const ordenadas = [...estado.biblioteca].sort((a, b) =>
+        (a.defecto - b.defecto) || a.nombre.localeCompare(b.nombre, "es"));
+
+    ordenadas.forEach(sena => {
+        const li = document.createElement("li");
+        li.className = "biblioteca-item";
+
+        const nombre = document.createElement("span");
+        nombre.className = "biblioteca-nombre";
+        nombre.textContent = sena.nombre; // textContent: el nombre viene del guante, no se interpreta como HTML
+
+        const etiquetas = document.createElement("span");
+        etiquetas.className = "biblioteca-etiquetas";
+
+        const tipo = document.createElement("span");
+        tipo.className = "etiqueta";
+        tipo.textContent = sena.movimiento ? "Con movimiento" : "Mano quieta";
+        etiquetas.appendChild(tipo);
+
+        if (sena.defecto) {
+            const fabrica = document.createElement("span");
+            fabrica.className = "etiqueta etiqueta-fabrica";
+            fabrica.textContent = "De fábrica";
+            etiquetas.appendChild(fabrica);
+        }
+
+        li.appendChild(nombre);
+        li.appendChild(etiquetas);
+
+        if (!sena.defecto) {
+            const borrar = document.createElement("button");
+            borrar.className = "btn-borrar-sena";
+            borrar.type = "button";
+            borrar.textContent = "Borrar";
+            borrar.setAttribute("aria-label", `Borrar la seña ${sena.nombre}`);
+            borrar.addEventListener("click", () => {
+                if (!confirm(`¿Borrar la seña «${sena.nombre}» del guante?`)) return;
+                enviarComando("DEL|" + sena.nombre).catch(() => mostrarAvisoBiblioteca(textoErrorGuante("envio")));
+            });
+            li.appendChild(borrar);
+        }
+
+        listaBiblioteca.appendChild(li);
+    });
+}
+
+/* ---------- Ventana "Agregar seña" ---------- */
+function mostrarPasoCal(paso) {
+    cal.paso = paso;
+    Object.entries(calPasos).forEach(([nombre, el]) => { el.hidden = nombre !== paso; });
+}
+
+function abrirModalCalibracion() {
+    calNombre.value = "";
+    document.querySelector('input[name="calTipo"][value="0"]').checked = true;
+    calErrorForm.hidden = true;
+    mostrarPasoCal("form");
+    modalCal.classList.remove("oculto");
+    document.body.classList.add("modal-abierto");
+    calNombre.focus();
+}
+
+function cerrarModalCalibracion() {
+    if (cal.midiendo) return; // mientras el guante mide no se puede cerrar
+    clearInterval(cal.temporizador);
+    clearTimeout(cal.vigilante);
+    cal.paso = "cerrado";
+    modalCal.classList.add("oculto");
+    document.body.classList.remove("modal-abierto");
+    btnAgregarSena.focus();
+}
+
+function errorFormulario(texto) {
+    calErrorForm.textContent = texto;
+    calErrorForm.hidden = false;
+}
+
+function empezarCalibracion() {
+    const nombre = calNombre.value.trim().toUpperCase();
+    const movimiento = document.querySelector('input[name="calTipo"]:checked').value === "1";
+
+    if (!nombre) return errorFormulario("Escribí el nombre de la seña o letra.");
+    if ([...nombre].length > MAX_CARACTERES_NOMBRE) return errorFormulario(`El nombre puede tener hasta ${MAX_CARACTERES_NOMBRE} caracteres.`);
+    if (/[|"\\]/.test(nombre)) return errorFormulario('El nombre no puede llevar los caracteres | " \\.');
+    if (new TextEncoder().encode(nombre).length > MAX_BYTES_NOMBRE) return errorFormulario("El nombre es demasiado largo.");
+    if (!guanteListoParaComandos()) return errorFormulario(textoErrorGuante("conexion"));
+
+    const existente = estado.biblioteca.find(s => s.nombre === nombre);
+    if (existente) {
+        const mensaje = existente.defecto
+            ? `Ya hay una seña de fábrica llamada «${nombre}». ¿Querés reemplazarla por la tuya?`
+            : `Ya existe una seña llamada «${nombre}». ¿Querés reemplazarla?`;
+        if (!confirm(mensaje)) return;
+    }
+
+    cal.nombre = nombre;
+    cal.movimiento = movimiento;
+    cal.midiendo = false;
+    calErrorForm.hidden = true;
+
+    // Pantalla de espera: primero una cuenta atrás para que la persona se prepare
+    mostrarPasoCal("espera");
+    calProgresoCaja.hidden = true;
+    calBotonesEspera.hidden = false;
+    calCuentaAtras.hidden = false;
+    calCuentaAtras.classList.remove("ahora");
+    calBarraRelleno.style.width = "0%";
+    calInstruccion.textContent = movimiento
+        ? `Preparate para «${nombre}»: cuando termine la cuenta, hacé el movimiento completo una y otra vez.`
+        : `Preparate para «${nombre}»: cuando termine la cuenta, hacé la seña y mantené la mano quieta.`;
+
+    let restante = SEGUNDOS_PREPARACION;
+    calCuentaAtras.textContent = restante;
+    clearInterval(cal.temporizador);
+    cal.temporizador = setInterval(() => {
+        restante--;
+        if (restante > 0) {
+            calCuentaAtras.textContent = restante;
+        } else {
+            clearInterval(cal.temporizador);
+            iniciarMedicion();
+        }
+    }, 1000);
+}
+
+function iniciarMedicion() {
+    cal.midiendo = true;
+    calCuentaAtras.textContent = "¡Ahora!";
+    calCuentaAtras.classList.add("ahora");
+    calBotonesEspera.hidden = true;
+    calProgresoCaja.hidden = false;
+    calibracionProgreso(0, MUESTRAS_CALIBRACION);
+
+    enviarComando(`CAL|${cal.nombre}|${cal.movimiento ? 1 : 0}`)
+        .catch(() => calibracionError("envio"));
+
+    reiniciarVigilante();
+}
+
+// Si el guante deja de dar señales (se apagó, se alejó), no se queda esperando para siempre
+function reiniciarVigilante() {
+    clearTimeout(cal.vigilante);
+    cal.vigilante = setTimeout(() => {
+        if (cal.paso === "espera") calibracionError("timeout");
+    }, MS_ESPERA_RESPUESTA);
+}
+
+function calibracionProgreso(actual, total) {
+    if (cal.paso !== "espera") return;
+    const porcentaje = Math.min(100, Math.round((actual / total) * 100));
+    calBarraRelleno.style.width = porcentaje + "%";
+    calBarra.setAttribute("aria-valuemax", total);
+    calBarra.setAttribute("aria-valuenow", actual);
+    calContador.textContent = `Midiendo… ${actual} de ${total}`;
+    if (actual > 0) reiniciarVigilante();
+}
+
+function mostrarResultado(ok, texto) {
+    clearInterval(cal.temporizador);
+    clearTimeout(cal.vigilante);
+    cal.midiendo = false;
+    mostrarPasoCal("resultado");
+    calResultadoIcono.textContent = ok ? "✓" : "✕";
+    calResultadoIcono.className = "cal-resultado-icono " + (ok ? "ok" : "error");
+    calResultadoTexto.textContent = texto;
+    calReintentar.hidden = ok;
+}
+
+function calibracionTerminada(d) {
+    if (cal.paso !== "espera") return;
+    let texto = `La seña «${d.n}» quedó guardada en tu guante.`;
+    if (d.s) {
+        texto += ` Ojo: se parece mucho a «${d.s}» y el guante podría confundirlas. Si pasa, volvé a calibrarla marcando más la seña.`;
+    }
+    mostrarResultado(true, texto);
+}
+
+function calibracionError(codigo) {
+    if (cal.paso !== "espera") return;
+    mostrarResultado(false, textoErrorGuante(codigo));
+}
+
+// Se llama desde alDesconectar()
+function calibracionPerdioConexion() {
+    if (cal.paso === "espera") calibracionError("conexion");
+}
+
+/* ---------- Eventos de la ventana ---------- */
+btnAgregarSena.addEventListener("click", abrirModalCalibracion);
+document.getElementById("calEmpezar").addEventListener("click", empezarCalibracion);
+document.getElementById("calCancelarForm").addEventListener("click", cerrarModalCalibracion);
+document.getElementById("calCancelarEspera").addEventListener("click", cerrarModalCalibracion);
+document.getElementById("calX").addEventListener("click", cerrarModalCalibracion);
+document.getElementById("calListo").addEventListener("click", cerrarModalCalibracion);
+calReintentar.addEventListener("click", () => mostrarPasoCal("form"));
+
+calNombre.addEventListener("keydown", (evento) => {
+    if (evento.key === "Enter") empezarCalibracion();
+});
+
+modalCal.addEventListener("click", (evento) => {
+    if (evento.target === modalCal) cerrarModalCalibracion();
+});
+
+document.addEventListener("keydown", (evento) => {
+    if (evento.key === "Escape" && !modalCal.classList.contains("oculto")) cerrarModalCalibracion();
+});
+
+actualizarUICalibracion();
 
 /* --------------------------------------------------------
    9) MANUALES DESCARGABLES (usuario y mantenimiento)
